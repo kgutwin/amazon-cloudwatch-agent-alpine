@@ -15,7 +15,7 @@ jobs:
       - name: Prepare Alpine image
         run: |
           sudo apt-get -y install libarchive-tools
-          dd if=/dev/zero of=$RUNNER_TEMP/alpine.img bs=1M count=1024
+          dd if=/dev/zero of=$RUNNER_TEMP/alpine.img bs=1M count=4096
           sed -e 's/\s*\([\+0-9a-zA-Z]*\).*/\1/' << EOF | fdisk $RUNNER_TEMP/alpine.img
             o # clear the in memory partition table
             n # new partition
