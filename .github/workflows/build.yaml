@@ -15,7 +15,8 @@ jobs:
       - name: Prepare Alpine image
         run: |
           sudo apt-get -y install libarchive-tools
-          dd if=/dev/zero of=$RUNNER_TEMP/alpine.img bs=1M count=8192
+          # it's one binary, Michael, how much space could it take to build? 32 gigs?
+          dd if=/dev/zero of=$RUNNER_TEMP/alpine.img bs=1M count=32K
           sed -e 's/\s*\([\+0-9a-zA-Z]*\).*/\1/' << EOF | fdisk $RUNNER_TEMP/alpine.img
             o # clear the in memory partition table
             n # new partition
@@ -55,7 +56,7 @@ jobs:
             df -h
             apk add go
             df -h
-            go install -trimpath -buildmode=default github.com/aws/amazon-cloudwatch-agent/cmd/amazon-cloudwatch-agent
+            go install -v -trimpath -buildmode=default github.com/aws/amazon-cloudwatch-agent/cmd/amazon-cloudwatch-agent
 
       - uses: actions/upload-artifact@v7
         with:
