@@ -1,0 +1,53 @@
+name: Build CloudWatch Agent
+
+on:
+  push:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Prepare Alpine image
+        run: |
+          sudo apt-get -y install libarchive-tools
+          dd if=/dev/zero of=$RUNNER_TEMP/alpine.img bs=1M count=1024
+          sed -e 's/\s*\([\+0-9a-zA-Z]*\).*/\1/' << EOF | fdisk $RUNNER_TEMP/alpine.img
+            o # clear the in memory partition table
+            n # new partition
+            p # primary partition
+            1 # partition number 1
+              # default - start at beginning of disk 
+            +10M # 10 MB boot partition
+            t # type
+            c # W95 FAT32 (LBA)
+            n # new partition
+            p # primary partition
+            2 # partion number 2
+              # default, start immediately after preceding partition
+              # default, extend partition to end of disk
+            w # write the partition table
+            q # and we're done
+          EOF
+          loopdev=$(sudo losetup --find --show --partscan $RUNNER_TEMP/alpine.img)
+          sudo mkfs.vfat ${loopdev}p1
+          sudo mkfs.ext4 ${loopdev}p2
+          mkdir root
+          sudo mount ${loopdev}p2 root
+          wget https://dl-cdn.alpinelinux.org/alpine/v3.24/releases/armhf/alpine-minirootfs-3.24.4-armhf.tar.gz
+          sudo -u root bsdtar -xpf alpine-minirootfs-3.24.4-armhf.tar.gz -C root
+          sync
+          ls -l $RUNNER_TEMP
+          sudo umount root
+          rm -rf alpine* root
+
+      - uses: pguyot/arm-runner-action@45f370abd7eed1b20397277e5ec0cb0a31adb026
+        with:
+          base_image: file://$RUNNER_TEMP/alpine.img
+          bind_mount_repository: true
+          commands: |
+            apk add go
+            go build -trimpath -buildmode=default github.com/aws/amazon-cloudwatch-agent/cmd/amazon-cloudwatch-agent
+
+      - uses: actions/upload-artifact@v7
+        with:
+          path: ~/go/bin
