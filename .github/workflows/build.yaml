@@ -7,6 +7,11 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout source repo
+        uses: actions/checkout@v7
+        with:
+          repository: aws/amazon-cloudwatch-agent
+
       - name: Prepare Alpine image
         run: |
           sudo apt-get -y install libarchive-tools
@@ -46,7 +51,7 @@ jobs:
           bind_mount_repository: true
           commands: |
             apk add go
-            go build -trimpath -buildmode=default github.com/aws/amazon-cloudwatch-agent/cmd/amazon-cloudwatch-agent
+            go install -trimpath -buildmode=default github.com/aws/amazon-cloudwatch-agent/cmd/amazon-cloudwatch-agent
 
       - uses: actions/upload-artifact@v7
         with:
