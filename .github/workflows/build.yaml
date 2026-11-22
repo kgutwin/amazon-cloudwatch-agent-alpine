@@ -50,6 +50,9 @@ jobs:
           base_image: file://$RUNNER_TEMP/alpine.img
           bind_mount_repository: true
           commands: |
+            df -h /tmp
+            echo blah blah blah
+            df -h
             apk add go
             go install -trimpath -buildmode=default github.com/aws/amazon-cloudwatch-agent/cmd/amazon-cloudwatch-agent
 
